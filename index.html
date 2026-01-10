@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsHub - Stay Updated</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header>
+  <div class="container">
+    <div class="header-content">
+      <div class="logo-section">
+        <h1>📰 NewsHub</h1>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <span class="sun-icon">☀️</span>
+          <span class="moon-icon">🌙</span>
+        </button>
+      </div>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search news..." aria-label="Search news">
+        <button class="search-btn" id="searchBtn">Search</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="categories">
+  <div class="container">
+    <div class="category-list">
+      <button class="category-btn active" data-category="">All</button>
+      <button class="category-btn" data-category="business">Business</button>
+      <button class="category-btn" data-category="technology">Technology</button>
+      <button class="category-btn" data-category="entertainment">Entertainment</button>
+      <button class="category-btn" data-category="sports">Sports</button>
+      <button class="category-btn" data-category="science">Science</button>
+      <button class="category-btn" data-category="health">Health</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <div class="api-key-banner" id="apiKeyBanner">
+      ⚠️ Please add your NewsAPI key in js/api.js to fetch real news. Get a free key at
+      <a href="https://newsapi.org/register" target="_blank">NewsAPI.org</a>
+    </div>
+
+    <div class="section-header">
+      <h2 class="section-title" id="sectionTitle">Top Headlines</h2>
+      <span class="results-count" id="resultsCount"></span>
+    </div>
+
+    <div id="loadingSpinner" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Loading news...</p>
+    </div>
+
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <div class="empty-state-icon">📭</div>
+      <h3>No articles found</h3>
+      <p>Try a different search term or category</p>
+    </div>
+
+    <div class="news-grid" id="newsGrid"></div>
+  </div>
+</main>
+
+<!-- Article Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-container">
+    <button class="modal-close" id="modalClose" aria-label="Close modal">
+      <span>✕</span>
+    </button>
+
+    <div class="modal-content">
+      <!-- Article Header -->
+      <div class="modal-header">
+        <img src="" alt="" class="modal-image" id="modalImage">
+        <div class="modal-meta">
+          <span class="modal-source" id="modalSource"></span>
+          <span class="modal-date" id="modalDate"></span>
+        </div>
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <p class="modal-description" id="modalDescription"></p>
+      </div>
+
+      <!-- View Mode Toggle -->
+      <div class="view-mode-toggle">
+        <button class="view-mode-btn active" data-mode="reader" id="readerModeBtn">
+          📖 Reader Mode
+        </button>
+        <button class="view-mode-btn" data-mode="embed" id="embedModeBtn">
+          🌐 Embedded View
+        </button>
+      </div>
+
+      <!-- Reader Mode Content -->
+      <div class="modal-body" id="modalBody">
+        <div class="reader-content" id="readerContent">
+          <div class="reader-loading">
+            <div class="spinner-small"></div>
+            <p>Loading article content...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Embedded View -->
+      <div class="modal-embed" id="modalEmbed" style="display: none;">
+        <iframe id="articleFrame" frameborder="0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button class="btn-secondary" id="shareBtn">
+          📤 Share
+        </button>
+        <a href="#" target="_blank" rel="noopener noreferrer" class="btn-primary" id="openOriginalBtn">
+          🔗 Open Original
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>© 2026 NewsHub - Powered by NewsAPI.org</p>
+<!--    <p class="footer-note">Built with HTML, CSS & JavaScript</p>-->
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/reader.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
