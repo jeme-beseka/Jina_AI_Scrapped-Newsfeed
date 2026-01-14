@@ -1,5 +1,5 @@
 // API Configuration
-const API_KEY = '7c3d52b7fdce42a5b1eb38dd65932b2f';
+const API_KEY = ''; // Visit https://newsapi.org/v2 to get your own API key and input here to get app running properly
 const API_BASE_URL = 'https://newsapi.org/v2';
 
 // API Module - Handles all API requests
