@@ -1,7 +1,8 @@
 // Reader Module - Content Extraction API Integration
 const Reader = {
     // Get one at https://jina.ai/ (10 million free tokens)
-    JINA_API_KEY: 'jina_cf0a54478e9844dfb2fe7f3fc25f0edf3IIG0lnPo1puFasJeQ13MxvNqgrH', // Leave empty to use without authentication
+    JINA_API_KEY: '', // Leave empty to use without authentication
+    //Go to the Jina API reader website and get your own API Key to run with authentication and about 10 million requests
 
     /**
      * Fetch article content using Jina AI Reader
