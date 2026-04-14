@@ -1,8 +1,4 @@
-// API Configuration
-const API_KEY = ''; // Visit https://newsapi.org/v2 to get your own API key and input here to get app running properly
-const API_BASE_URL = 'https://newsapi.org/v2';
-
-// API Module - Handles all API requests
+// API Module - Handles all API requests via serverless functions
 const API = {
     /**
      * Fetch top headlines from NewsAPI
@@ -11,8 +7,8 @@ const API = {
      */
     async fetchTopHeadlines(category = '') {
         try {
-            const categoryParam = category ? `&category=${category}` : '';
-            const url = `${API_BASE_URL}/top-headlines?country=us${categoryParam}&pageSize=30&apiKey=${API_KEY}`;
+            const categoryParam = category ? `?category=${category}` : '';
+            const url = `/api/headlines${categoryParam}`;
 
             const response = await fetch(url);
 
@@ -35,7 +31,7 @@ const API = {
      */
     async searchNews(query) {
         try {
-            const url = `${API_BASE_URL}/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=30&language=en&apiKey=${API_KEY}`;
+            const url = `/api/search?q=${encodeURIComponent(query)}`;
 
             const response = await fetch(url);
 
@@ -52,10 +48,10 @@ const API = {
     },
 
     /**
-     * Check if API key is configured
+     * Check if API is available
      * @returns {boolean}
      */
     isApiKeyConfigured() {
-        return API_KEY !== 'YOUR_API_KEY_HERE' && API_KEY.length > 0;
+        return true;
     }
 };
