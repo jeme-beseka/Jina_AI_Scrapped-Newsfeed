@@ -187,12 +187,27 @@ header {
     font-size: var(--font-size-3xl);
     font-weight: 700;
     color: var(--color-text-primary);
-    letter-spacing: -0.025em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.header-logo {
+    height: 48px;
+    width: 48px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
 }
 
 @media (max-width: 640px) {
     .logo-section h1 {
         font-size: var(--font-size-2xl);
+    }
+    
+    .header-logo {
+        height: 36px;
+        width: 36px;
     }
 }
 
