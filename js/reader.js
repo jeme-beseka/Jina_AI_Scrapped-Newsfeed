@@ -105,52 +105,115 @@ const Reader = {
         let lines = markdown.split('\n');
         let cleanedLines = [];
         let inArticle = false;
+        let articleStarted = false;
+        
+        // Comprehensive skip patterns
         let skipPatterns = [
-            /^(Skip to content|Advertisement|Watch Live|Subscribe|Sign In)/i,
-            /^(Home|News|Sport|Business|Technology|Health|Culture|Arts|Travel)/i,
-            /^(Weather|Newsletters|Share|Save|Add as preferred)/i,
-            /^(Related|More from the BBC|Follow BBC on)/i,
-            /^(Terms of Use|Privacy Policy|Cookies|Accessibility)/i,
-            /^(BBC in other languages|Read the BBC)/i,
-            /^\[.*\]\(.*\)$/,  // Standalone links
-            /^Image \d+/i,      // Image metadata
-            /^!<a href=/i,      // Broken image tags
-            /loading="lazy"/i,  // Image attributes
-            /^\d+ (mins?|hrs?|days?) ago$/i,  // Timestamps
-            /^##\s*(US home buyers|What is a|Founder of|Quantum computing)/i  // Related articles
+            // Navigation & UI
+            /^(Skip to content|Advertisement|Watch Live|Subscribe|Sign In|Got a Tip\?)/i,
+            /^(Home|News|Sport|Business|Technology|Health|Culture|Arts|Travel|Earth|Audio|Video|Live|Documentaries)/i,
+            /^(Weather|Newsletters|Share|Save|Add as preferred|Plus Icon|Click to)/i,
+            /^(U\.S\.|Asia|Global|Film|TV|What To Watch|Music|Docs|Digital|Gaming|Awards Circuit)/i,
+            
+            // Social & Sharing
+            /^(Share|Facebook|Twitter|Instagram|LinkedIn|Pinterest|Reddit|Tumblr|WhatsApp|Email)/i,
+            /^\[.*\]\(https?:\/\/(www\.)?(facebook|twitter|linkedin|pinterest|reddit|tumblr|whatsapp)\.com/i,
+            /^!\[.*\]\(.*\)$/,  // Standalone images without context
+            
+            // Metadata & Timestamps
+            /^Image \d+/i,
+            /^!<a href=/i,
+            /loading="lazy"/i,
+            /^\d+ (mins?|hrs?|days?|seconds?) ago$/i,
+            /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d+, \d{4}/i,
+            /^\d{1,2}:\d{2}(am|pm)/i,
+            
+            // Related content & footers
+            /^(Related|More from|Follow|Latest|Popular|Must Read|Sponsored|Most Popular)/i,
+            /^(Terms of Use|Privacy Policy|Cookies|Accessibility|About Us|Contact|Advertise)/i,
+            /^(BBC in other languages|Read the BBC|Our Sites|Connect|Legal|Magazine)/i,
+            /^##\s*(Read More|More from|Latest|Popular)/i,
+            
+            // Article metadata
+            /^By\s+[A-Z]/,  // Author bylines (keep first, skip repeats)
+            /^(Senior|Staff|Contributing|Reporter|Editor|Writer)/i,
+            
+            // Ads & Promotions
+            /^(Loading comments|Leave a Reply|Your email|Required fields|Sign Up|Alerts and Newsletters)/i,
+            /^(Variety is a part of|Penske Media|All Rights Reserved|Powered by)/i,
+            /^\d+\/\d+ Skip Ad/i,
+            /^(Visit Advertiser|GO TO PAGE)/i,
+            
+            // Empty links and broken formatting
+            /^\* \[\]\(/,  // Empty list items with links
+            /^- \[\]\(/,
+            /^Δ$/,  // Greek delta (form symbols)
+            /^0 Comments/i,
+            
+            // Cookie/Privacy notices
+            /^(Cookie List|Consent|Privacy Preference|Allow All|Manage Consent)/i,
+            /^(Performance Cookies|Targeting Cookies|Functional Cookies|Strictly Necessary)/i,
+            /checkbox label/i,
+            
+            // Breadcrumbs
+            /^\d+\.\s+(Home|News|Film|TV|Sport)/i,
+        ];
+
+        // Patterns that indicate end of article
+        let endPatterns = [
+            /^(Related Stories|More from|Must Read|Popular on|Sponsored Stories|Most Popular)/i,
+            /^(Sign Up for|Subscribe|Newsletter)/i,
+            /^(Leave a Reply|Comments|Loading comments)/i,
+            /^(Read More About:|Tags:|Categories:)/i,
+            /^#### (Read More|More From|Connect|Legal|Magazine)/i,
         ];
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
 
             // Skip empty lines at the start
-            if (!inArticle && !line) continue;
+            if (!articleStarted && !line) continue;
 
-            // Start capturing after title/metadata
+            // Skip metadata headers
             if (line.match(/^(Title:|URL Source:|Published Time:|Markdown Content:)/)) {
                 continue;
             }
 
-            // Skip navigation and metadata patterns
-            let shouldSkip = skipPatterns.some(pattern => pattern.test(line));
-            if (shouldSkip) continue;
-
-            // Stop at "Related" or footer sections
-            if (line.match(/^(Related|More from the BBC|Follow BBC|BBC in other languages)/i)) {
+            // Check if we've hit the end of article
+            if (articleStarted && endPatterns.some(pattern => pattern.test(line))) {
                 break;
             }
 
-            // Start article content after first substantial paragraph
-            if (!inArticle && line.length > 50) {
-                inArticle = true;
+            // Skip patterns
+            if (skipPatterns.some(pattern => pattern.test(line))) {
+                continue;
             }
 
-            if (inArticle || line.startsWith('#')) {
+            // Detect article start - look for substantial content
+            if (!articleStarted) {
+                // Article likely starts with a heading or substantial paragraph
+                if (line.startsWith('#') || line.length > 80) {
+                    articleStarted = true;
+                    inArticle = true;
+                }
+            }
+
+            // Once in article, keep content
+            if (inArticle) {
+                // Skip very short lines that are likely navigation
+                if (line.length < 3 && !line.startsWith('#')) {
+                    continue;
+                }
+                
                 cleanedLines.push(lines[i]);
             }
         }
 
-        return cleanedLines.join('\n');
+        // Post-processing: remove consecutive empty lines
+        let result = cleanedLines.join('\n');
+        result = result.replace(/\n{3,}/g, '\n\n');
+        
+        return result.trim();
     },
 
     /**
