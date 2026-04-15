@@ -1,55 +1,27 @@
-// Reader Module - Content Extraction API Integration
+// Reader Module - Content Extraction via Serverless Function
 const Reader = {
-    // Get one at https://jina.ai/ (10 million free tokens)
-    JINA_API_KEY: '', // Leave empty to use without authentication
-    //Go to the Jina API reader website and get your own API Key to run with authentication and about 10 million requests
-
     /**
-     * Fetch article content using Jina AI Reader
+     * Fetch article content using Jina AI Reader via serverless function
      * @param {string} url - Article URL
      * @returns {Promise<Object>} Extracted content
      */
     async fetchArticleContent(url) {
         try {
-            const readerUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;
-
-            // Build headers
-            const headers = {
-                'Accept': 'text/plain' // Request plain text/markdown for better compatibility
-            };
-
-            // Add API key if configured (optional, for higher rate limits)
-            if (this.JINA_API_KEY) {
-                headers['Authorization'] = `Bearer ${this.JINA_API_KEY}`;
-            }
-
-            const response = await fetch(readerUrl, { headers });
+            const apiUrl = `/api/reader?url=${encodeURIComponent(url)}`;
+            const response = await fetch(apiUrl);
 
             if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Authentication failed. Check your Jina API key or remove it to use free tier.');
-                } else if (response.status === 429) {
-                    throw new Error('Rate limit exceeded. Try adding a free Jina API key in reader.js');
-                }
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
 
-            // Get the content as text (Jina returns markdown/text by default)
-            const content = await response.text();
-
-            // Validate content
-            if (!content || content.trim().length === 0) {
-                throw new Error('Empty response from Jina AI Reader');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch article content');
             }
 
-            return {
-                success: true,
-                content: content,
-                title: '',
-                description: '',
-                author: '',
-                publishedTime: ''
-            };
+            return data;
         } catch (error) {
             console.error('Error fetching article content:', error);
             return {
