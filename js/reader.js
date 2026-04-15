@@ -95,6 +95,65 @@ const Reader = {
     },
 
     /**
+     * Clean markdown content by removing navigation and metadata
+     * @param {string} markdown - Raw markdown content
+     * @returns {string} Cleaned markdown
+     */
+    cleanMarkdownContent(markdown) {
+        if (!markdown) return '';
+
+        let lines = markdown.split('\n');
+        let cleanedLines = [];
+        let inArticle = false;
+        let skipPatterns = [
+            /^(Skip to content|Advertisement|Watch Live|Subscribe|Sign In)/i,
+            /^(Home|News|Sport|Business|Technology|Health|Culture|Arts|Travel)/i,
+            /^(Weather|Newsletters|Share|Save|Add as preferred)/i,
+            /^(Related|More from the BBC|Follow BBC on)/i,
+            /^(Terms of Use|Privacy Policy|Cookies|Accessibility)/i,
+            /^(BBC in other languages|Read the BBC)/i,
+            /^\[.*\]\(.*\)$/,  // Standalone links
+            /^Image \d+/i,      // Image metadata
+            /^!<a href=/i,      // Broken image tags
+            /loading="lazy"/i,  // Image attributes
+            /^\d+ (mins?|hrs?|days?) ago$/i,  // Timestamps
+            /^##\s*(US home buyers|What is a|Founder of|Quantum computing)/i  // Related articles
+        ];
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+
+            // Skip empty lines at the start
+            if (!inArticle && !line) continue;
+
+            // Start capturing after title/metadata
+            if (line.match(/^(Title:|URL Source:|Published Time:|Markdown Content:)/)) {
+                continue;
+            }
+
+            // Skip navigation and metadata patterns
+            let shouldSkip = skipPatterns.some(pattern => pattern.test(line));
+            if (shouldSkip) continue;
+
+            // Stop at "Related" or footer sections
+            if (line.match(/^(Related|More from the BBC|Follow BBC|BBC in other languages)/i)) {
+                break;
+            }
+
+            // Start article content after first substantial paragraph
+            if (!inArticle && line.length > 50) {
+                inArticle = true;
+            }
+
+            if (inArticle || line.startsWith('#')) {
+                cleanedLines.push(lines[i]);
+            }
+        }
+
+        return cleanedLines.join('\n');
+    },
+
+    /**
      * Format content for display
      * @param {Object} contentData - Content data from API
      * @returns {string} Formatted HTML
@@ -105,7 +164,6 @@ const Reader = {
                 <div class="reader-error">
                     <h3>Unable to load article content</h3>
                     <p>${contentData.error || 'Please try the embedded view or open the original article.'}</p>
-                    ${!this.JINA_API_KEY ? '<p><small>Tip: Add a free Jina API key in reader.js for higher rate limits (200 req/min instead of 20)</small></p>' : ''}
                 </div>
             `;
         }
@@ -121,19 +179,14 @@ const Reader = {
 
         let content = contentData.content;
 
-        // Jina returns markdown by default, convert to HTML
-        if (content.includes('<html') || content.includes('<!DOCTYPE')) {
-            // It's full HTML page, parse it
-            content = this.parseContent(content);
-        } else if (content.includes('<p>') || content.includes('<div>') || content.includes('<article>')) {
-            // It's HTML fragment, clean it
-            content = this.parseContent(content);
-        } else {
-            // It's markdown, convert to HTML
-            content = this.markdownToHtml(content);
-        }
+        // Clean the markdown content first
+        content = this.cleanMarkdownContent(content);
 
-        return content;
+        // Convert markdown to HTML
+        content = this.markdownToHtml(content);
+
+        // Wrap in article container
+        return `<article class="reader-article">${content}</article>`;
     },
 
     /**
